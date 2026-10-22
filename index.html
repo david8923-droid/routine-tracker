@@ -1,100 +1,173 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#f8fafc">
-    <title>데일리 루틴 트래커 | Daily Routine Tracker</title>
-    <meta name="description" content="오늘의 루틴을 추가하고 체크하며 완료율을 한눈에 확인하는 심플한 데일리 루틴 트래커.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>데일리 루틴 트래커</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex justify-center py-10 px-4">
 
-<body>
-    <div class="bg-blobs" aria-hidden="true">
-        <span class="blob blob-1"></span>
-        <span class="blob blob-2"></span>
-    </div>
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 space-y-6 flex flex-col justify-between">
+    <!-- Header -->
+    <header class="space-y-2">
+      <div class="flex justify-between items-center text-sm font-semibold text-indigo-600 tracking-wider uppercase">
+        <span id="currentDate">TODAY</span>
+        <span id="streakBadge" class="bg-indigo-50 px-2.5 py-1 rounded-full text-indigo-700">🌱 데일리</span>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">오늘의 루틴 달성</h1>
+      
+      <!-- Progress Bar -->
+      <div class="pt-2">
+        <div class="flex justify-between text-xs font-medium text-slate-500 mb-1.5">
+          <span>완료율</span>
+          <span id="progressText" class="font-bold text-indigo-600">0%</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+          <div id="progressBar" class="bg-indigo-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+    </header>
 
-    <main class="container">
-        <!-- 헤더: 날짜 + 완료율 -->
-        <header class="card header-card">
-            <div class="header-top">
-                <div>
-                    <p class="eyebrow" id="weekday-label">TODAY</p>
-                    <h1 class="date-title" id="date-title">--</h1>
-                </div>
-                <div class="percent-badge" id="percent-badge">
-                    <span id="percent-value">0</span><small>%</small>
-                </div>
-            </div>
+    <!-- Routine Add Input -->
+    <form id="routineForm" class="flex gap-2">
+      <input 
+        type="text" 
+        id="routineInput" 
+        placeholder="새로운 루틴을 입력하세요..." 
+        class="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+        required
+      />
+      <button 
+        type="submit" 
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-1 shadow-sm shrink-0"
+      >
+        <i class="fa-solid fa-plus text-xs"></i> 추가
+      </button>
+    </form>
 
-            <div class="progress" role="progressbar" aria-label="오늘의 완료율" aria-valuemin="0" aria-valuemax="100"
-                aria-valuenow="0" id="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
+    <!-- Routine List -->
+    <section class="space-y-3">
+      <div class="flex justify-between items-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <span>목록</span>
+        <span id="routineCount">0개</span>
+      </div>
+      <ul id="routineList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+        <!-- 루틴 아이템들이 JS로 렌더링됩니다 -->
+      </ul>
+    </section>
 
-            <div class="header-meta">
-                <span id="progress-text">0 / 0 완료</span>
-                <span id="progress-message">루틴을 추가해 하루를 시작해 보세요 ✨</span>
-            </div>
+    <!-- Footer info -->
+    <footer class="pt-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+      <span>브라우저에 자동 저장됨</span>
+      <button id="clearAllBtn" class="hover:text-rose-500 transition-colors underline underline-offset-2">전체 초기화</button>
+    </footer>
+  </div>
 
-            <!-- 최근 7일 기록 -->
-            <div class="week" id="week-history" aria-label="최근 7일 완료율"></div>
-        </header>
+  <script>
+    // State
+    let routines = JSON.parse(localStorage.getItem('routines_v1')) || [
+      { id: 1, text: '아침 스트레칭 & 물 마시기', completed: false },
+      { id: 2, text: '30분 러닝 또는 유산소 운동', completed: false },
+      { id: 3, text: '영어 팟캐스트 듣기', completed: false }
+    ];
 
-        <!-- 입력창 -->
-        <section class="card" aria-labelledby="add-title">
-            <h2 class="sr-only" id="add-title">루틴 추가</h2>
-            <form class="add-form" id="add-form" autocomplete="off">
-                <input type="text" id="task-input" class="input" placeholder="새로운 루틴을 입력하세요 (예: 물 2L 마시기)"
-                    maxlength="80" required>
-                <button type="submit" class="btn btn-primary" id="add-btn">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round">
-                        <path d="M12 5v14M5 12h14" />
-                    </svg>
-                    <span>추가</span>
-                </button>
-            </form>
-        </section>
+    const routineList = document.getElementById('routineList');
+    const routineForm = document.getElementById('routineForm');
+    const routineInput = document.getElementById('routineInput');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const routineCount = document.getElementById('routineCount');
+    const currentDate = document.getElementById('currentDate');
+    const clearAllBtn = document.getElementById('clearAllBtn');
 
-        <!-- 체크리스트 -->
-        <section class="card list-card" aria-labelledby="list-title">
-            <div class="list-head">
-                <h2 class="list-title" id="list-title">오늘의 체크리스트</h2>
-                <div class="filters" role="tablist">
-                    <button class="filter active" data-filter="all" id="filter-all">전체</button>
-                    <button class="filter" data-filter="active" id="filter-active">진행중</button>
-                    <button class="filter" data-filter="done" id="filter-done">완료</button>
-                </div>
-            </div>
+    // Date init
+    const now = new Date();
+    const options = { month: 'long', day: 'numeric', weekday: 'short' };
+    currentDate.textContent = now.toLocaleDateString('ko-KR', options);
 
-            <ul class="task-list" id="task-list"></ul>
+    function saveAndRender() {
+      localStorage.setItem('routines_v1', JSON.stringify(routines));
+      render();
+    }
 
-            <div class="empty" id="empty-state" hidden>
-                <div class="empty-icon">📝</div>
-                <p class="empty-title">아직 루틴이 없어요</p>
-                <p class="empty-desc">위 입력창에서 첫 번째 루틴을 추가해 보세요.</p>
-            </div>
+    function render() {
+      routineList.innerHTML = '';
+      
+      if (routines.length === 0) {
+        routineList.innerHTML = `
+          <li class="text-center py-8 text-sm text-slate-400">
+            등록된 루틴이 없습니다. 위에서 루틴을 추가해 보세요!
+          </li>
+        `;
+      }
 
-            <div class="list-foot">
-                <span id="remaining-text">남은 루틴 0개</span>
-                <button class="btn-link" id="reset-today-btn">오늘 체크 초기화</button>
-            </div>
-        </section>
+      routines.forEach(item => {
+        const li = document.createElement('li');
+        li.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+          item.completed 
+            ? 'bg-slate-50 border-slate-100 text-slate-400' 
+            : 'bg-white border-slate-200 text-slate-800 shadow-sm'
+        }`;
 
-        <footer class="footnote">
-            더블클릭으로 수정 · 체크 상태는 매일 자정에 자동 초기화되며 데이터는 브라우저에 저장됩니다.
-        </footer>
-    </main>
+        li.innerHTML = `
+          <label class="flex items-center gap-3 cursor-pointer flex-1 select-none">
+            <input type="checkbox" ${item.completed ? 'checked' : ''} 
+              class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 transition-all cursor-pointer">
+            <span class="text-sm ${item.completed ? 'line-through text-slate-400' : 'font-medium'}">${item.text}</span>
+          </label>
+          <button class="delete-btn text-slate-300 hover:text-rose-500 transition-colors p-1" title="삭제">
+            <i class="fa-regular fa-trash-can text-sm"></i>
+          </button>
+        `;
 
-    <script src="app.js"></script>
+        // Checkbox toggle
+        const checkbox = li.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', () => {
+          item.completed = checkbox.checked;
+          saveAndRender();
+        });
+
+        // Delete button
+        const deleteBtn = li.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          routines = routines.filter(r => r.id !== item.id);
+          saveAndRender();
+        });
+
+        routineList.appendChild(li);
+      });
+
+      // Update progress
+      const total = routines.length;
+      const completedCount = routines.filter(r => r.completed).length;
+      const percent = total === 0 ? 0 : Math.round((completedCount / total) * 100);
+      
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${percent}%`;
+      routineCount.textContent = `${completedCount}/${total} 완료`;
+    }
+
+    routineForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = routineInput.value.trim();
+      if (!text) return;
+      routines.push({ id: Date.now(), text, completed: false });
+      routineInput.value = '';
+      saveAndRender();
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      if (confirm('모든 루틴을 초기화하시겠습니까?')) {
+        routines = [];
+        saveAndRender();
+      }
+    });
+
+    render();
+  </script>
 </body>
-
 </html>
