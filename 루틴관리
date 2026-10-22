@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <title>데일리 루틴 트래커 | Daily Routine Tracker</title>
+    <meta name="description" content="오늘의 루틴을 추가하고 체크하며 완료율을 한눈에 확인하는 심플한 데일리 루틴 트래커.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="bg-blobs" aria-hidden="true">
+        <span class="blob blob-1"></span>
+        <span class="blob blob-2"></span>
+    </div>
+
+    <main class="container">
+        <!-- 헤더: 날짜 + 완료율 -->
+        <header class="card header-card">
+            <div class="header-top">
+                <div>
+                    <p class="eyebrow" id="weekday-label">TODAY</p>
+                    <h1 class="date-title" id="date-title">--</h1>
+                </div>
+                <div class="percent-badge" id="percent-badge">
+                    <span id="percent-value">0</span><small>%</small>
+                </div>
+            </div>
+
+            <div class="progress" role="progressbar" aria-label="오늘의 완료율" aria-valuemin="0" aria-valuemax="100"
+                aria-valuenow="0" id="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="header-meta">
+                <span id="progress-text">0 / 0 완료</span>
+                <span id="progress-message">루틴을 추가해 하루를 시작해 보세요 ✨</span>
+            </div>
+
+            <!-- 최근 7일 기록 -->
+            <div class="week" id="week-history" aria-label="최근 7일 완료율"></div>
+        </header>
+
+        <!-- 입력창 -->
+        <section class="card" aria-labelledby="add-title">
+            <h2 class="sr-only" id="add-title">루틴 추가</h2>
+            <form class="add-form" id="add-form" autocomplete="off">
+                <input type="text" id="task-input" class="input" placeholder="새로운 루틴을 입력하세요 (예: 물 2L 마시기)"
+                    maxlength="80" required>
+                <button type="submit" class="btn btn-primary" id="add-btn">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    <span>추가</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- 체크리스트 -->
+        <section class="card list-card" aria-labelledby="list-title">
+            <div class="list-head">
+                <h2 class="list-title" id="list-title">오늘의 체크리스트</h2>
+                <div class="filters" role="tablist">
+                    <button class="filter active" data-filter="all" id="filter-all">전체</button>
+                    <button class="filter" data-filter="active" id="filter-active">진행중</button>
+                    <button class="filter" data-filter="done" id="filter-done">완료</button>
+                </div>
+            </div>
+
+            <ul class="task-list" id="task-list"></ul>
+
+            <div class="empty" id="empty-state" hidden>
+                <div class="empty-icon">📝</div>
+                <p class="empty-title">아직 루틴이 없어요</p>
+                <p class="empty-desc">위 입력창에서 첫 번째 루틴을 추가해 보세요.</p>
+            </div>
+
+            <div class="list-foot">
+                <span id="remaining-text">남은 루틴 0개</span>
+                <button class="btn-link" id="reset-today-btn">오늘 체크 초기화</button>
+            </div>
+        </section>
+
+        <footer class="footnote">
+            더블클릭으로 수정 · 체크 상태는 매일 자정에 자동 초기화되며 데이터는 브라우저에 저장됩니다.
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
